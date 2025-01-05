@@ -67,3 +67,40 @@
     </script>
 </body>
 </html>
+
+
+from flask import Flask, request, jsonify
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+
+app = Flask(__name__)
+
+@app.route('/send-email', methods=['POST'])
+def send_email():
+    data = request.json
+    from_email = data['fromEmail']
+    subject = data['subject']
+    message = data['message']
+    
+    try:
+        to_email = "kushal936@hotmail.com"
+        msg = MIMEMultipart()
+        msg['From'] = from_email
+        msg['To'] = to_email
+        msg['Subject'] = subject
+
+        msg.attach(MIMEText(message, 'plain'))
+
+        with smtplib.SMTP('smtp.gmail.com', 587) as server:
+            server.starttls()
+            server.login('your_email@gmail.com', 'your_password')
+            server.sendmail(from_email, to_email, msg.as_string())
+
+        return jsonify({"message": "Email sent successfully!"}), 200
+    except Exception as e:
+        return jsonify({"message": f"Failed to send email. Error: {str(e)}"}), 500
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
