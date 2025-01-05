@@ -3,111 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>To-Do List App</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <title>Email Messaging App</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
+            background: linear-gradient(to right, #ffecd2, #fcb69f);
+            font-family: 'Arial', sans-serif;
+        }
+        .container {
+            margin-top: 50px;
             padding: 20px;
-            background-color: #eef2f7;
-            font-family: Arial, sans-serif;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        .completed {
-            text-decoration: line-through;
-            color: gray;
+        .btn-custom {
+            background-color: #ff7e5f;
+            color: white;
         }
-        .btn {
-            border-radius: 20px;
-        }
-        .input-group input {
-            border-radius: 20px 0 0 20px;
-        }
-        .input-group button {
-            border-radius: 0 20px 20px 0;
-        }
-        h1 {
-            font-size: 2.5rem;
-            color: #333;
+        .btn-custom:hover {
+            background-color: #ff6b4a;
         }
     </style>
 </head>
 <body>
-    <div class="container shadow-lg p-4 mb-5 bg-white rounded">
-        <h1 class="text-center mb-4 text-primary">My To-Do List</h1>
-        <div class="input-group mb-3">
-            <input id="taskInput" type="text" class="form-control" placeholder="Add a new task">
-            <button class="btn btn-outline-primary" onclick="addTask()">Add Task</button>
-        </div>
-        <ul id="taskList" class="list-group mb-3"></ul>
-        <button class="btn btn-danger w-100" onclick="clearAllTasks()">Clear All Tasks</button>
+    <div class="container">
+        <h2 class="text-center">Send an Email</h2>
+        <form id="emailForm">
+            <div class="mb-3">
+                <label for="fromEmail" class="form-label">From</label>
+                <input type="email" class="form-control" id="fromEmail" placeholder="Your email" required>
+            </div>
+            <div class="mb-3">
+                <label for="subject" class="form-label">Subject</label>
+                <input type="text" class="form-control" id="subject" placeholder="Email subject" required>
+            </div>
+            <div class="mb-3">
+                <label for="message" class="form-label">Message</label>
+                <textarea class="form-control" id="message" rows="5" placeholder="Type your message here" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-custom w-100">Send Email</button>
+        </form>
     </div>
 
     <script>
-        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        document.getElementById('emailForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const fromEmail = document.getElementById('fromEmail').value;
+            const subject = document.getElementById('subject').value;
+            const message = document.getElementById('message').value;
 
-        function saveTasks() {
-            localStorage.setItem('tasks', JSON.stringify(tasks));
-        }
-
-        function renderTasks() {
-            const taskList = document.getElementById('taskList');
-            taskList.innerHTML = '';
-            tasks.forEach((task, index) => {
-                const taskItem = document.createElement('li');
-                taskItem.className = `list-group-item d-flex justify-content-between align-items-center ${task.completed ? 'completed' : ''}`;
-                taskItem.innerHTML = `
-                    <span class="task-name" onclick="toggleComplete(${index})">${task.name}</span>
-                    <div>
-                        <button class="btn btn-sm btn-warning me-2" onclick="editTask(${index})">Edit</button>
-                        <button class="btn btn-sm ${task.completed ? 'btn-success' : 'btn-danger'}" onclick="toggleComplete(${index})">
-                            ${task.completed ? 'Undo' : 'Complete'}
-                        </button>
-                    </div>
-                `;
-                taskList.appendChild(taskItem);
+            const response = await fetch('/send-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ fromEmail, subject, message })
             });
-            saveTasks();
-        }
 
-        function addTask() {
-            const taskInput = document.getElementById('taskInput');
-            const taskName = taskInput.value.trim();
-            if (taskName) {
-                tasks.push({ name: taskName, completed: false });
-                taskInput.value = '';
-                renderTasks();
-            } else {
-                alert('Please enter a task name!');
-            }
-        }
-
-        function toggleComplete(index) {
-            tasks[index].completed = !tasks[index].completed;
-            renderTasks();
-        }
-
-        function clearAllTasks() {
-            if (confirm('Are you sure you want to clear all tasks?')) {
-                tasks = [];
-                renderTasks();
-            }
-        }
-
-        function deleteTask(index) {
-            tasks.splice(index, 1);
-            renderTasks();
-        }
-
-        function editTask(index) {
-            const newTaskName = prompt('Edit task:', tasks[index].name);
-            if (newTaskName !== null && newTaskName.trim()) {
-                tasks[index].name = newTaskName.trim();
-                renderTasks();
-            } else {
-                alert('Task name cannot be empty!');
-            }
-        }
-
-        renderTasks();
+            const result = await response.json();
+            alert(result.message);
+        });
     </script>
 </body>
 </html>
